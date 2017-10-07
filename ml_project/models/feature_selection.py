@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array, check_is_fitted
@@ -29,3 +30,35 @@ class RandomSelection(BaseEstimator, TransformerMixin):
         X_new = X[:, self.components]
 
         return X_new
+
+
+class ZeroCutout(BaseEstimator, TransformerMixin):
+    """Random Selection of features"""
+
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        X = check_array(X)
+        X = X.reshape(-1, 176, 208, 176)
+        min_0 = float('inf')
+        min_1 = float('inf')
+        min_2 = float('inf')
+        max_0 = float('-inf')
+        max_1 = float('-inf')
+        max_2 = float('-inf')
+        for index in range(X.shape[0]):
+            non_zero = np.where(X[index] > 0)
+            min_0 = min(min_0, non_zero[0].min())
+            min_1 = min(min_1, non_zero[1].min())
+            min_2 = min(min_2, non_zero[2].min())
+            max_0 = max(max_0, non_zero[0].max())
+            max_1 = max(max_1, non_zero[1].max())
+            max_2 = max(max_2, non_zero[2].max())
+
+        X_new = X[:, min_0:max_0, min_1:max_1, min_2:max_2]
+        print(X_new.shape)
+        return X_new.reshape(X.shape[0], -1)

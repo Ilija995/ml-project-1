@@ -13,6 +13,7 @@ class Normalize(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
+        X = check_array(X)
         min_X = X.min(0)
         min_X = min_X[np.newaxis, :]
         max_X = X.max(0)

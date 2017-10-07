@@ -1,24 +1,54 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 
 X = np.load('../../data/X_train.npy')
+X = X.reshape(-1, 176, 208, 176)
 
-min_X = X.min(0)
-min_X = min_X[np.newaxis, :]
-max_X = X.max(0)
-max_X = max_X[np.newaxis, :]
+print(np.count_nonzero(X == 0) / X.size)
+min_0 = float('inf')
+min_1 = float('inf')
+min_2 = float('inf')
+max_0 = float('-inf')
+max_1 = float('-inf')
+max_2 = float('-inf')
+for index in range(X.shape[0]):
+    non_zero = np.where(X[index] > 0)
+    min_0 = min(min_0, non_zero[0].min())
+    min_1 = min(min_1, non_zero[1].min())
+    min_2 = min(min_2, non_zero[2].min())
+    max_0 = max(max_0, non_zero[0].max())
+    max_1 = max(max_1, non_zero[1].max())
+    max_2 = max(max_2, non_zero[2].max())
 
-no_features = 6443008
-bucket_size = 2000
-no_buckets = int(round(no_features / bucket_size + 0.5))
-for bucket_index in range(no_buckets):
-    start = bucket_index * bucket_size
-    end = min((bucket_index + 1) * bucket_size, no_features)
-    data_bucket = X[:, start:end]
-    min_bucket = min_X[:, start:end]
-    max_bucket = max_X[:, start:end]
-    diff_min_max = max_bucket - min_bucket
-    diff_min_max[diff_min_max == 0] = 1
-    X[:, start:end] = (data_bucket - min_bucket) / diff_min_max
+X_new = X[-1, min_0:max_0, min_1:max_1, min_2:max_2]
 
-print(X.min().mean())
-print(X.max().mean())
+print(min_0)
+print(min_1)
+print(min_2)
+print(max_0)
+print(max_1)
+print(max_2)
+print(X_new.shape)
+
+136
+170
+144
+
+
+
+# z, x, y = X[0].nonzero()
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# ax.scatter(x, y, -z, zdir='z', c= 'red')
+# plt.savefig("demo.png")
+
+# new_shape = np.array(X.shape) / 2
+# new_shape[0] = X.shape[0]
+# new_data = np.zeros(shape=new_shape.astype(dtype=np.int32))
+
+# print(new_shape)
+# print(X.shape)
+
+
