@@ -1,32 +1,24 @@
 import numpy as np
 
-train_data = np.load('../../data/X_train.npy')
-# train_data = np.arange(10000100).reshape(100, 100001)
-# train_data = np.random.rand(100, 100001)
+X = np.load('../../data/X_train.npy')
 
-print(train_data.shape)
+min_X = X.min(0)
+min_X = min_X[np.newaxis, :]
+max_X = X.max(0)
+max_X = max_X[np.newaxis, :]
 
-m = train_data.mean(0, dtype=np.float64)
-m = m[np.newaxis, :]
-print(train_data.mean())
-
-l = 6443008
-# l = 100001
+no_features = 6443008
 bucket_size = 2000
-# bucket_size = 1000
-o = int(round(l / bucket_size + 0.5))
-counter = 0
-new_data = np.zeros(shape=train_data.shape, dtype=np.float16)
-for bucket in range(o):
-    start = bucket * bucket_size
-    end = min((bucket + 1) * bucket_size, l)
-    data_bucket = train_data[:, start:end]
-    bucket_mean = m[:, start:end]
-    new_bucket = data_bucket - bucket_mean
-    if counter < 10 and new_bucket.mean(dtype=np.float64) > 0.00001:
-        counter += 1
-        print('bucket {} shape {} start {} end {} mean {} new mean {}'.format(bucket, data_bucket.shape, start, end, data_bucket.mean(dtype=np.float64), new_bucket.mean(dtype=np.float64)))
-    new_data[:, start:end] = new_bucket
+no_buckets = int(round(no_features / bucket_size + 0.5))
+for bucket_index in range(no_buckets):
+    start = bucket_index * bucket_size
+    end = min((bucket_index + 1) * bucket_size, no_features)
+    data_bucket = X[:, start:end]
+    min_bucket = min_X[:, start:end]
+    max_bucket = max_X[:, start:end]
+    diff_min_max = max_bucket - min_bucket
+    diff_min_max[diff_min_max == 0] = 1
+    X[:, start:end] = (data_bucket - min_bucket) / diff_min_max
 
-print(new_data.shape)
-print(new_data.mean(dtype=np.float64))
+print(X.min().mean())
+print(X.max().mean())
