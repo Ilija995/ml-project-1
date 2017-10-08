@@ -3,6 +3,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.utils.random import sample_without_replacement
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_regression
 
 
 class RandomSelection(BaseEstimator, TransformerMixin):
@@ -62,3 +64,9 @@ class ZeroCutout(BaseEstimator, TransformerMixin):
         X_new = X[:, min_0:max_0, min_1:max_1, min_2:max_2]
         print(X_new.shape)
         return X_new.reshape(X.shape[0], -1)
+
+
+class SelectKBestRegression(SelectKBest):
+
+    def __init__(self, k):
+        super().__init__(score_func=f_regression, k=k)
