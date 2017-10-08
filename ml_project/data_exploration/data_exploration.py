@@ -32,10 +32,6 @@ print(max_1)
 print(max_2)
 print(X_new.shape)
 
-136
-170
-144
-
 
 
 # z, x, y = X[0].nonzero()

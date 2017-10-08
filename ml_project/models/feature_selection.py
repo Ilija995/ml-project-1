@@ -34,7 +34,7 @@ class RandomSelection(BaseEstimator, TransformerMixin):
         return X_new
 
 
-class ZeroCutout(BaseEstimator, TransformerMixin):
+class ZeroCutoutPlusPooling(BaseEstimator, TransformerMixin):
     """Random Selection of features"""
 
     def __init__(self):
@@ -61,9 +61,35 @@ class ZeroCutout(BaseEstimator, TransformerMixin):
             max_1 = max(max_1, non_zero[1].max())
             max_2 = max(max_2, non_zero[2].max())
 
-        X_new = X[:, min_0:max_0, min_1:max_1, min_2:max_2]
-        print(X_new.shape)
-        return X_new.reshape(X.shape[0], -1)
+        min_0 -= (max_0 - min_0) % 2
+        min_1 -= (max_1 - min_1) % 2
+        min_2 -= (max_2 - min_2) % 2
+
+        X_tmp = X[:, min_0:max_0, min_1:max_1, min_2:max_2]
+        print("Temporary shape %s" % str(X_tmp.shape))
+
+        # Pooling
+        X_new_shape = np.array(X_tmp.shape) // 2
+        X_new_shape[0] = X_tmp.shape[0]
+        X_new = np.zeros(shape=X_new_shape)
+        d_x = [0, 1, 1, 0, 0, 1, 1, 0]
+        d_y = [0, 0, 0, 0, 1, 1, 1, 1]
+        d_z = [0, 0, 1, 1, 0, 0, 1, 1]
+        for index in range(X_new.shape[0]):
+            for x_axis in range(X_new.shape[1]):
+                for y_axis in range(X_new.shape[2]):
+                    for z_axis in range(X_new.shape[3]):
+                        max_pixel = float('-inf')
+                        for shift_index in range(len(d_x)):
+                            max_pixel = max(max_pixel, X_tmp[index,
+                                                             2 * x_axis + d_x[shift_index],
+                                                             2 * y_axis + d_y[shift_index],
+                                                             2 * z_axis + d_z[shift_index]])
+                        X_new[index, x_axis, y_axis, z_axis] = max_pixel
+
+        print("New shape %s" % str(X_new.shape))
+
+        return X_new.reshape(X_new.shape[0], -1)
 
 
 class SelectKBestRegression(SelectKBest):
