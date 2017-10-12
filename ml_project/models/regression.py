@@ -1,11 +1,14 @@
-import sklearn as skl
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.linear_model import LinearRegression
 import numpy as np
 import pandas as pd
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from matplotlib import pyplot as plt
 
+from ml_project.models.feature_selection import RandomSelection
 
-class KernelEstimator(skl.base.BaseEstimator, skl.base.TransformerMixin):
+
+class KernelEstimator(BaseEstimator, TransformerMixin):
     """docstring"""
     def __init__(self, save_path=None):
         super(KernelEstimator, self).__init__()
@@ -60,3 +63,33 @@ class KernelEstimator(skl.base.BaseEstimator, skl.base.TransformerMixin):
 
     def set_save_path(self, save_path):
         self.save_path = save_path
+
+
+class Ensamble(BaseEstimator, TransformerMixin):
+    def __init__(self, no_components=3):
+        super(Ensamble, self).__init__()
+        self.no_components = no_components
+        self.random_states = [624, 442, 37]
+
+    def fit(self, X, y):
+        self.regressors = []
+        for i in range(self.no_components):
+            selector = RandomSelection(random_state=self.random_states[i])
+            X_transformed = selector.fit_transform(X, y)
+            regressor = LinearRegression(normalize=True)
+            self.regressors.append(regressor.fit(X_transformed, y))
+
+    def predict(self, X):
+        check_is_fitted(self, ['regressors'])
+        sum = np.zeros(shape=[X.shape[0]])
+        for i in range(self.no_components):
+            sum += self.regressors[i].predict(X)
+
+        return sum / self.no_components
+
+    def score(self, X, y, sample_weight=None):
+        scores = (self.predict(X) - y)**2 / len(y)
+        score = np.sum(scores)
+
+        return score
+
